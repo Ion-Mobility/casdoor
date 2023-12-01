@@ -16,6 +16,7 @@ package object
 
 import (
 	"fmt"
+	"os"
 	"strconv"
 	"strings"
 
@@ -31,7 +32,7 @@ const (
 	UserPropertiesWechatOpenId  = "wechatOpenId"
 )
 
-const UserEnforcerId = "built-in/user-enforcer-built-in"
+var UserEnforcerId = fmt.Sprintf("%s/user-enforcer-built-in", os.Getenv("ORGANIZATION_NAME"))
 
 var userEnforcer *UserGroupEnforcer
 

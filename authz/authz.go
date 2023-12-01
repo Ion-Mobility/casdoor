@@ -15,6 +15,7 @@
 package authz
 
 import (
+	"os"
 	"strings"
 
 	"github.com/casbin/casbin/v2"
@@ -27,7 +28,7 @@ import (
 var Enforcer *casbin.Enforcer
 
 func InitApi() {
-	e, err := object.GetInitializedEnforcer(util.GetId("built-in", "api-enforcer-built-in"))
+	e, err := object.GetInitializedEnforcer(util.GetId(os.Getenv("ORGANIZATION_NAME"), "api-enforcer-built-in"))
 	if err != nil {
 		panic(err)
 	}

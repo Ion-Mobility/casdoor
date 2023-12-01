@@ -19,6 +19,10 @@ RUN apk add --update sudo
 RUN apk add curl
 RUN apk add ca-certificates && update-ca-certificates
 
+RUN wget -q -t3 'https://packages.doppler.com/public/cli/rsa.8004D9FF50437357.key' -O /etc/apk/keys/cli@doppler-8004D9FF50437357.rsa.pub && \
+    echo 'https://packages.doppler.com/public/cli/alpine/any-version/main' | tee -a /etc/apk/repositories && \
+    apk add --no-cache doppler
+
 RUN adduser -D $USER -u 1000 \
     && echo "$USER ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/$USER \
     && chmod 0440 /etc/sudoers.d/$USER \
@@ -32,19 +36,9 @@ COPY --from=BACK --chown=$USER:$USER /go/src/casdoor/swagger ./swagger
 COPY --from=BACK --chown=$USER:$USER /go/src/casdoor/conf/app.conf ./conf/app.conf
 COPY --from=BACK --chown=$USER:$USER /go/src/casdoor/version_info.txt ./go/src/casdoor/version_info.txt
 COPY --from=FRONT --chown=$USER:$USER /web/build ./web/build
+ENTRYPOINT ["doppler", "run", "--", "/server"]
 
-ENTRYPOINT ["/server"]
-
-
-FROM debian:latest AS db
-RUN apt update \
-    && apt install -y \
-        mariadb-server \
-        mariadb-client \
-    && rm -rf /var/lib/apt/lists/*
-
-
-FROM db AS ALLINONE
+FROM debian:latest AS ALLINONE
 LABEL MAINTAINER="https://casdoor.org/"
 
 RUN apt update
@@ -59,4 +53,3 @@ COPY --from=BACK /go/src/casdoor/version_info.txt ./go/src/casdoor/version_info.
 COPY --from=FRONT /web/build ./web/build
 
 ENTRYPOINT ["/bin/bash"]
-CMD ["/docker-entrypoint.sh"]

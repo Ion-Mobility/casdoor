@@ -6,22 +6,27 @@ services:
       context: ./
       dockerfile: Dockerfile
       target: STANDARD
-    entrypoint: /bin/sh -c './server --createDatabase=true'
+    entrypoint: /bin/sh -c 'doppler run -- ./server --createDatabase=true'
     ports:
       - "8000:8000"
     depends_on:
       - db
     environment:
-      RUNNING_IN_DOCKER: "true"
+      - RUNNING_IN_DOCKER="true"
+      - DOPPLER_TOKEN=${DOPPLER_TOKEN}
     volumes:
       - ./conf:/conf/
   db:
-    restart: always
-    image: mysql:8.0.25
-    platform: linux/amd64
+    image: library/postgres:13-alpine
     ports:
-      - "3306:3306"
-    environment:
-      MYSQL_ROOT_PASSWORD: 123456
+      - 5432:5432
+    restart: unless-stopped
     volumes:
-      - /usr/local/docker/mysql:/var/lib/mysql
+      - casdoor-db:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+
+volumes:
+  casdoor-db:
+    driver: local
