@@ -25,9 +25,11 @@ func InitDb() {
 	existed := initBuiltInOrganization()
 	if !existed {
 		// initBuiltInPermission()
+		initBuiltInProvider()
 		initBuiltInUser()
 		initBuiltInApplication()
 		initBuiltInCert()
+		// initBuiltInLdap()
 	}
 
 	existed = initBuiltInApiModel()
@@ -77,7 +79,7 @@ func getBuiltInAccountItems() []*AccountItem {
 }
 
 func initBuiltInOrganization() bool {
-	organization, err := getOrganization("admin", os.Getenv("ORGANIZATION_NAME"))
+	organization, err := getOrganization("admin", "built-in")
 	if err != nil {
 		panic(err)
 	}
@@ -88,7 +90,7 @@ func initBuiltInOrganization() bool {
 
 	organization = &Organization{
 		Owner:              "admin",
-		Name:               os.Getenv("ORGANIZATION_NAME"),
+		Name:               "built-in",
 		CreatedTime:        util.GetCurrentTime(),
 		DisplayName:        os.Getenv("ORGANIZATION_DISPLAY_NAME"),
 		WebsiteUrl:         os.Getenv("ORGANIZATION_URL"),
@@ -113,7 +115,7 @@ func initBuiltInOrganization() bool {
 }
 
 func initBuiltInUser() {
-	user, err := getUser(os.Getenv("ORGANIZATION_NAME"), "admin")
+	user, err := getUser("built-in", "admin")
 	if err != nil {
 		panic(err)
 	}
@@ -122,7 +124,7 @@ func initBuiltInUser() {
 	}
 
 	user = &User{
-		Owner:             os.Getenv("ORGANIZATION_NAME"),
+		Owner:             "built-in",
 		Name:              "admin",
 		CreatedTime:       util.GetCurrentTime(),
 		Id:                util.GenerateId(),
@@ -139,7 +141,7 @@ func initBuiltInUser() {
 		IsAdmin:           true,
 		IsForbidden:       false,
 		IsDeleted:         false,
-		SignupApplication: os.Getenv("APP_NAME"),
+		SignupApplication: "app-built-in",
 		CreatedIp:         os.Getenv("IP_ADDRESS"),
 		Properties:        make(map[string]string),
 	}
@@ -150,7 +152,7 @@ func initBuiltInUser() {
 }
 
 func initBuiltInApplication() {
-	application, err := getApplication("admin", os.Getenv("APP_NAME"))
+	application, err := getApplication("admin", "app-built-in")
 	if err != nil {
 		panic(err)
 	}
@@ -161,11 +163,11 @@ func initBuiltInApplication() {
 
 	application = &Application{
 		Owner:            "admin",
-		Name:             os.Getenv("APP_NAME"),
+		Name:             "app-built-in",
 		CreatedTime:      util.GetCurrentTime(),
 		DisplayName:      os.Getenv("APP_DISPLAY_NAME"),
 		Logo:             os.Getenv("ORGANIZATION_IMAGE"),
-		Organization:     os.Getenv("ORGANIZATION_NAME"),
+		Organization:     "built-in",
 		Cert:             os.Getenv("CERT_NAME"),
 		EnablePassword:   true,
 		EnableCodeSignin: true,
@@ -217,6 +219,34 @@ func initBuiltInCert() {
 	}
 }
 
+// func initBuiltInLdap() {
+// 	ldap, err := GetLdap("ldap-built-in")
+// 	if err != nil {
+// 		panic(err)
+// 	}
+
+// 	if ldap != nil {
+// 		return
+// 	}
+
+// 	ldap = &Ldap{
+// 		Id:         "ldap-built-in",
+// 		Owner:      "built-in",
+// 		ServerName: "BuildIn LDAP Server",
+// 		Host:       "example.com",
+// 		Port:       389,
+// 		Username:   "cn=buildin,dc=example,dc=com",
+// 		Password:   "123",
+// 		BaseDn:     "ou=BuildIn,dc=example,dc=com",
+// 		AutoSync:   0,
+// 		LastSync:   "",
+// 	}
+// 	_, err = AddLdap(ldap)
+// 	if err != nil {
+// 		panic(err)
+// 	}
+// }
+
 func initBuiltInProvider() {
 	provider, err := GetProvider(util.GetId("admin", os.Getenv("SMS_TWILIO_PROVIDER_NAME")))
 	if err != nil {
@@ -251,7 +281,7 @@ func initBuiltInProvider() {
 // }
 
 func initBuiltInUserModel() {
-	model, err := GetModel(fmt.Sprintf("%s/user-model-built-in", os.Getenv("ORGANIZATION_NAME")))
+	model, err := GetModel(fmt.Sprintf("%s/user-model-built-in", "built-in"))
 	if err != nil {
 		panic(err)
 	}
@@ -261,7 +291,7 @@ func initBuiltInUserModel() {
 	}
 
 	model = &Model{
-		Owner:       os.Getenv("ORGANIZATION_NAME"),
+		Owner:       "built-in",
 		Name:        "user-model-built-in",
 		CreatedTime: util.GetCurrentTime(),
 		DisplayName: "Built-in Model",
@@ -287,7 +317,7 @@ m = g(r.sub, p.sub) && r.obj == p.obj && r.act == p.act`,
 }
 
 func initBuiltInApiModel() bool {
-	model, err := GetModel(fmt.Sprintf("%s/api-model-built-in", os.Getenv("ORGANIZATION_NAME")))
+	model, err := GetModel(fmt.Sprintf("%s/api-model-built-in", "built-in"))
 	if err != nil {
 		panic(err)
 	}
@@ -318,7 +348,7 @@ m = (r.subOwner == p.subOwner || p.subOwner == "*") && \
     (r.subOwner == r.objOwner && r.subName == r.objName)`
 
 	model = &Model{
-		Owner:       os.Getenv("ORGANIZATION_NAME"),
+		Owner:       "built-in",
 		Name:        "api-model-built-in",
 		CreatedTime: util.GetCurrentTime(),
 		DisplayName: "API Model",
@@ -369,7 +399,7 @@ m = (r.subOwner == p.subOwner || p.subOwner == "*") && \
 // }
 
 func initBuiltInUserAdapter() {
-	adapter, err := GetAdapter(fmt.Sprintf("%s/user-adapter-built-in", os.Getenv("ORGANIZATION_NAME")))
+	adapter, err := GetAdapter("built-in/user-adapter-built-in")
 	if err != nil {
 		panic(err)
 	}
@@ -379,7 +409,7 @@ func initBuiltInUserAdapter() {
 	}
 
 	adapter = &Adapter{
-		Owner:       os.Getenv("ORGANIZATION_NAME"),
+		Owner:       "built-in",
 		Name:        "user-adapter-built-in",
 		CreatedTime: util.GetCurrentTime(),
 		Table:       "casbin_user_rule",
@@ -392,7 +422,7 @@ func initBuiltInUserAdapter() {
 }
 
 func initBuiltInApiAdapter() {
-	adapter, err := GetAdapter(fmt.Sprintf("%s/api-adapter-built-in", os.Getenv("ORGANIZATION_NAME")))
+	adapter, err := GetAdapter("built-in/api-adapter-built-in")
 	if err != nil {
 		panic(err)
 	}
@@ -402,7 +432,7 @@ func initBuiltInApiAdapter() {
 	}
 
 	adapter = &Adapter{
-		Owner:       os.Getenv("ORGANIZATION_NAME"),
+		Owner:       "built-in",
 		Name:        "api-adapter-built-in",
 		CreatedTime: util.GetCurrentTime(),
 		Table:       "casbin_api_rule",
@@ -415,7 +445,7 @@ func initBuiltInApiAdapter() {
 }
 
 func initBuiltInUserEnforcer() {
-	enforcer, err := GetEnforcer(fmt.Sprintf("%s/user-enforcer-built-in", os.Getenv("ORGANIZATION_NAME")))
+	enforcer, err := GetEnforcer("built-in/user-enforcer-built-in")
 	if err != nil {
 		panic(err)
 	}
@@ -425,12 +455,12 @@ func initBuiltInUserEnforcer() {
 	}
 
 	enforcer = &Enforcer{
-		Owner:       os.Getenv("ORGANIZATION_NAME"),
+		Owner:       "built-in",
 		Name:        "user-enforcer-built-in",
 		CreatedTime: util.GetCurrentTime(),
 		DisplayName: "User Enforcer",
-		Model:       fmt.Sprintf("%s/user-model-built-in", os.Getenv("ORGANIZATION_NAME")),
-		Adapter:     fmt.Sprintf("%s/user-adapter-built-in", os.Getenv("ORGANIZATION_NAME")),
+		Model:       "built-in/user-model-built-in",
+		Adapter:     "built-in/user-adapter-built-in",
 	}
 
 	_, err = AddEnforcer(enforcer)
@@ -440,7 +470,7 @@ func initBuiltInUserEnforcer() {
 }
 
 func initBuiltInApiEnforcer() {
-	enforcer, err := GetEnforcer(fmt.Sprintf("%s/api-enforcer-built-in", os.Getenv("ORGANIZATION_NAME")))
+	enforcer, err := GetEnforcer("built-in/api-enforcer-built-in")
 	if err != nil {
 		panic(err)
 	}
@@ -450,12 +480,12 @@ func initBuiltInApiEnforcer() {
 	}
 
 	enforcer = &Enforcer{
-		Owner:       os.Getenv("ORGANIZATION_NAME"),
+		Owner:       "built-in",
 		Name:        "api-enforcer-built-in",
 		CreatedTime: util.GetCurrentTime(),
 		DisplayName: "API Enforcer",
-		Model:       fmt.Sprintf("%s/api-model-built-in", os.Getenv("ORGANIZATION_NAME")),
-		Adapter:     fmt.Sprintf("%s/api-adapter-built-in", os.Getenv("ORGANIZATION_NAME")),
+		Model:       "built-in/api-model-built-in",
+		Adapter:     "built-in/api-adapter-built-in",
 	}
 
 	_, err = AddEnforcer(enforcer)

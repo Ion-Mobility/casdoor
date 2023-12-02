@@ -70,7 +70,7 @@ func GetConfigInt64(key string) (int64, error) {
 }
 
 func GetConfigDataSourceName() string {
-	dataSourceName := GetConfigString("DATA_SOURCE_NAME")
+	dataSourceName := GetConfigString("dataSourceName")
 
 	runningInDocker := os.Getenv("RUNNING_IN_DOCKER")
 	if runningInDocker == "true" {

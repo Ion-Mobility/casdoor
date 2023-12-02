@@ -148,7 +148,7 @@ func (adapter *Adapter) InitAdapter() error {
 	var dataSourceName string
 	if adapter.UseSameDb || adapter.isBuiltIn() {
 		driverName = conf.GetConfigString("driverName")
-		dataSourceName = conf.GetConfigString("DATA_SOURCE_NAME")
+		dataSourceName = conf.GetConfigString("dataSourceName")
 		if conf.GetConfigString("driverName") == "mysql" {
 			dataSourceName = dataSourceName + conf.GetConfigString("dbName")
 		}

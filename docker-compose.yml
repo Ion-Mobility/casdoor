@@ -6,14 +6,14 @@ services:
       context: ./
       dockerfile: Dockerfile
       target: STANDARD
-    entrypoint: /bin/sh -c 'doppler run -- ./server --createDatabase=true'
+    entrypoint: /bin/sh -c './server --createDatabase=true'
     ports:
       - "8000:8000"
     depends_on:
       - db
     environment:
       - RUNNING_IN_DOCKER="true"
-      - DOPPLER_TOKEN=${DOPPLER_TOKEN}
+      - DOPPLER_TOKEN
     volumes:
       - ./conf:/conf/
   db:
