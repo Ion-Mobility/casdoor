@@ -15,24 +15,21 @@
 package object
 
 import (
-	"encoding/gob"
 	"fmt"
 	"os"
 
-	"github.com/casdoor/casdoor/conf"
 	"github.com/casdoor/casdoor/util"
-	"github.com/go-webauthn/webauthn/webauthn"
 )
 
 func InitDb() {
 	existed := initBuiltInOrganization()
 	if !existed {
-		initBuiltInPermission()
+		// initBuiltInPermission()
 		initBuiltInProvider()
 		initBuiltInUser()
 		initBuiltInApplication()
 		initBuiltInCert()
-		initBuiltInLdap()
+		// initBuiltInLdap()
 	}
 
 	existed = initBuiltInApiModel()
@@ -44,7 +41,7 @@ func InitDb() {
 		initBuiltInUserEnforcer()
 	}
 
-	initWebAuthn()
+	// initWebAuthn()
 }
 
 func getBuiltInAccountItems() []*AccountItem {
@@ -95,15 +92,15 @@ func initBuiltInOrganization() bool {
 		Owner:              "admin",
 		Name:               "built-in",
 		CreatedTime:        util.GetCurrentTime(),
-		DisplayName:        "Built-in Organization",
-		WebsiteUrl:         "https://example.com",
-		Favicon:            fmt.Sprintf("%s/img/casbin/favicon.ico", conf.GetConfigString("staticBaseUrl")),
-		PasswordType:       "plain",
+		DisplayName:        os.Getenv("ORGANIZATION_DISPLAY_NAME"),
+		WebsiteUrl:         os.Getenv("ORGANIZATION_URL"),
+		Favicon:            os.Getenv("ORGANIZATION_IMAGE"),
+		PasswordType:       "md5-salt",
 		PasswordOptions:    []string{"AtLeast6"},
-		CountryCodes:       []string{"US", "ES", "FR", "DE", "GB", "CN", "JP", "KR", "VN", "ID", "SG", "IN"},
-		DefaultAvatar:      fmt.Sprintf("%s/img/casbin.svg", conf.GetConfigString("staticBaseUrl")),
+		CountryCodes:       []string{"VN", "ID", "SG", "CN"},
+		DefaultAvatar:      os.Getenv("ORGANIZATION_IMAGE"),
 		Tags:               []string{},
-		Languages:          []string{"en", "zh", "es", "fr", "de", "id", "ja", "ko", "ru", "vi", "pt"},
+		Languages:          []string{"vi", "id", "en"},
 		InitScore:          2000,
 		AccountItems:       getBuiltInAccountItems(),
 		EnableSoftDeletion: false,
@@ -132,14 +129,12 @@ func initBuiltInUser() {
 		CreatedTime:       util.GetCurrentTime(),
 		Id:                util.GenerateId(),
 		Type:              "normal-user",
-		Password:          "123",
+		Password:          os.Getenv("ADMIN_PASSWORD"),
 		DisplayName:       "Admin",
-		Avatar:            fmt.Sprintf("%s/img/casbin.svg", conf.GetConfigString("staticBaseUrl")),
-		Email:             "admin@example.com",
-		Phone:             "12345678910",
-		CountryCode:       "US",
+		Email:             os.Getenv("ADMIN_EMAIL"),
+		Phone:             os.Getenv("ADMIN_PHONE"),
+		CountryCode:       "SG",
 		Address:           []string{},
-		Affiliation:       "Example Inc.",
 		Tag:               "staff",
 		Score:             2000,
 		Ranking:           1,
@@ -147,7 +142,7 @@ func initBuiltInUser() {
 		IsForbidden:       false,
 		IsDeleted:         false,
 		SignupApplication: "app-built-in",
-		CreatedIp:         "127.0.0.1",
+		CreatedIp:         os.Getenv("IP_ADDRESS"),
 		Properties:        make(map[string]string),
 	}
 	_, err = AddUser(user)
@@ -167,27 +162,21 @@ func initBuiltInApplication() {
 	}
 
 	application = &Application{
-		Owner:          "admin",
-		Name:           "app-built-in",
-		CreatedTime:    util.GetCurrentTime(),
-		DisplayName:    "Casdoor",
-		Logo:           fmt.Sprintf("%s/img/casdoor-logo_1185x256.png", conf.GetConfigString("staticBaseUrl")),
-		HomepageUrl:    "https://casdoor.org",
-		Organization:   "built-in",
-		Cert:           "cert-built-in",
-		EnablePassword: true,
-		EnableSignUp:   true,
+		Owner:            "admin",
+		Name:             "app-built-in",
+		CreatedTime:      util.GetCurrentTime(),
+		DisplayName:      os.Getenv("APP_DISPLAY_NAME"),
+		Logo:             os.Getenv("ORGANIZATION_IMAGE"),
+		Organization:     "built-in",
+		Cert:             os.Getenv("CERT_NAME"),
+		EnablePassword:   true,
+		EnableCodeSignin: true,
 		Providers: []*ProviderItem{
-			{Name: "provider_captcha_default", CanSignUp: false, CanSignIn: false, CanUnlink: false, Prompted: false, SignupGroup: "", Rule: "None", Provider: nil},
+			{Name: os.Getenv("SMS_TWILIO_PROVIDER_NAME"), CanSignUp: true, CanSignIn: true, CanUnlink: true, Prompted: false, SignupGroup: "", Rule: "None", Provider: nil},
 		},
 		SignupItems: []*SignupItem{
 			{Name: "ID", Visible: false, Required: true, Prompted: false, Rule: "Random"},
-			{Name: "Username", Visible: true, Required: true, Prompted: false, Rule: "None"},
-			{Name: "Display name", Visible: true, Required: true, Prompted: false, Rule: "None"},
-			{Name: "Password", Visible: true, Required: true, Prompted: false, Rule: "None"},
-			{Name: "Confirm password", Visible: true, Required: true, Prompted: false, Rule: "None"},
-			{Name: "Email", Visible: true, Required: true, Prompted: false, Rule: "Normal"},
-			{Name: "Phone", Visible: true, Required: true, Prompted: false, Rule: "None"},
+			{Name: "Phone", Visible: true, Required: true, Prompted: false, Rule: "Normal"},
 			{Name: "Agreement", Visible: true, Required: true, Prompted: false, Rule: "None"},
 		},
 		Tags:          []string{},
@@ -201,23 +190,8 @@ func initBuiltInApplication() {
 	}
 }
 
-func readTokenFromFile() (string, string) {
-	pemPath := "./object/token_jwt_key.pem"
-	keyPath := "./object/token_jwt_key.key"
-	pem, err := os.ReadFile(pemPath)
-	if err != nil {
-		return "", ""
-	}
-	key, err := os.ReadFile(keyPath)
-	if err != nil {
-		return "", ""
-	}
-	return string(pem), string(key)
-}
-
 func initBuiltInCert() {
-	tokenJwtCertificate, tokenJwtPrivateKey := readTokenFromFile()
-	cert, err := getCert("admin", "cert-built-in")
+	cert, err := getCert("admin", os.Getenv("CERT_NAME"))
 	if err != nil {
 		panic(err)
 	}
@@ -228,16 +202,16 @@ func initBuiltInCert() {
 
 	cert = &Cert{
 		Owner:           "admin",
-		Name:            "cert-built-in",
+		Name:            os.Getenv("CERT_NAME"),
 		CreatedTime:     util.GetCurrentTime(),
-		DisplayName:     "Built-in Cert",
+		DisplayName:     os.Getenv("CERT_DISPLAY_NAME"),
 		Scope:           "JWT",
 		Type:            "x509",
 		CryptoAlgorithm: "RS256",
 		BitSize:         4096,
 		ExpireInYears:   20,
-		Certificate:     tokenJwtCertificate,
-		PrivateKey:      tokenJwtPrivateKey,
+		Certificate:     os.Getenv("JWT_CERTIFICATE"),
+		PrivateKey:      os.Getenv("JWT_PRIVATE_KEY"),
 	}
 	_, err = AddCert(cert)
 	if err != nil {
@@ -245,36 +219,36 @@ func initBuiltInCert() {
 	}
 }
 
-func initBuiltInLdap() {
-	ldap, err := GetLdap("ldap-built-in")
-	if err != nil {
-		panic(err)
-	}
+// func initBuiltInLdap() {
+// 	ldap, err := GetLdap("ldap-built-in")
+// 	if err != nil {
+// 		panic(err)
+// 	}
 
-	if ldap != nil {
-		return
-	}
+// 	if ldap != nil {
+// 		return
+// 	}
 
-	ldap = &Ldap{
-		Id:         "ldap-built-in",
-		Owner:      "built-in",
-		ServerName: "BuildIn LDAP Server",
-		Host:       "example.com",
-		Port:       389,
-		Username:   "cn=buildin,dc=example,dc=com",
-		Password:   "123",
-		BaseDn:     "ou=BuildIn,dc=example,dc=com",
-		AutoSync:   0,
-		LastSync:   "",
-	}
-	_, err = AddLdap(ldap)
-	if err != nil {
-		panic(err)
-	}
-}
+// 	ldap = &Ldap{
+// 		Id:         "ldap-built-in",
+// 		Owner:      "built-in",
+// 		ServerName: "BuildIn LDAP Server",
+// 		Host:       "example.com",
+// 		Port:       389,
+// 		Username:   "cn=buildin,dc=example,dc=com",
+// 		Password:   "123",
+// 		BaseDn:     "ou=BuildIn,dc=example,dc=com",
+// 		AutoSync:   0,
+// 		LastSync:   "",
+// 	}
+// 	_, err = AddLdap(ldap)
+// 	if err != nil {
+// 		panic(err)
+// 	}
+// }
 
 func initBuiltInProvider() {
-	provider, err := GetProvider(util.GetId("admin", "provider_captcha_default"))
+	provider, err := GetProvider(util.GetId("admin", os.Getenv("SMS_TWILIO_PROVIDER_NAME")))
 	if err != nil {
 		panic(err)
 	}
@@ -284,12 +258,17 @@ func initBuiltInProvider() {
 	}
 
 	provider = &Provider{
-		Owner:       "admin",
-		Name:        "provider_captcha_default",
-		CreatedTime: util.GetCurrentTime(),
-		DisplayName: "Captcha Default",
-		Category:    "Captcha",
-		Type:        "Default",
+		Owner:        "admin",
+		Name:         os.Getenv("SMS_TWILIO_PROVIDER_NAME"),
+		CreatedTime:  util.GetCurrentTime(),
+		DisplayName:  os.Getenv("SMS_TWILIO_PROVIDER_NAME"),
+		Category:     os.Getenv("SMS_TWILIO_PROVIDER_NAME"),
+		Type:         "Twilio SMS",
+		Method:       "Normal",
+		ClientId:     os.Getenv("SMS_TWILIO_ACCOUNT_SID"),
+		ClientSecret: os.Getenv("SMS_TWILIO_AUTH_TOKEN"),
+		TemplateCode: os.Getenv("SMS_TEMPLATE"),
+		AppId:        os.Getenv("SMS_TWILIO_MESSAGE_SERVICE_SID"),
 	}
 	_, err = AddProvider(provider)
 	if err != nil {
@@ -297,12 +276,12 @@ func initBuiltInProvider() {
 	}
 }
 
-func initWebAuthn() {
-	gob.Register(webauthn.SessionData{})
-}
+// func initWebAuthn() {
+// 	gob.Register(webauthn.SessionData{})
+// }
 
 func initBuiltInUserModel() {
-	model, err := GetModel("built-in/user-model-built-in")
+	model, err := GetModel(fmt.Sprintf("%s/user-model-built-in", "built-in"))
 	if err != nil {
 		panic(err)
 	}
@@ -338,7 +317,7 @@ m = g(r.sub, p.sub) && r.obj == p.obj && r.act == p.act`,
 }
 
 func initBuiltInApiModel() bool {
-	model, err := GetModel("built-in/api-model-built-in")
+	model, err := GetModel(fmt.Sprintf("%s/api-model-built-in", "built-in"))
 	if err != nil {
 		panic(err)
 	}
@@ -382,42 +361,42 @@ m = (r.subOwner == p.subOwner || p.subOwner == "*") && \
 	return false
 }
 
-func initBuiltInPermission() {
-	permission, err := GetPermission("built-in/permission-built-in")
-	if err != nil {
-		panic(err)
-	}
-	if permission != nil {
-		return
-	}
+// func initBuiltInPermission() {
+// 	permission, err := GetPermission("built-in/permission-built-in")
+// 	if err != nil {
+// 		panic(err)
+// 	}
+// 	if permission != nil {
+// 		return
+// 	}
 
-	permission = &Permission{
-		Owner:        "built-in",
-		Name:         "permission-built-in",
-		CreatedTime:  util.GetCurrentTime(),
-		DisplayName:  "Built-in Permission",
-		Description:  "Built-in Permission",
-		Users:        []string{"built-in/*"},
-		Groups:       []string{},
-		Roles:        []string{},
-		Domains:      []string{},
-		Model:        "model-built-in",
-		Adapter:      "",
-		ResourceType: "Application",
-		Resources:    []string{"app-built-in"},
-		Actions:      []string{"Read", "Write", "Admin"},
-		Effect:       "Allow",
-		IsEnabled:    true,
-		Submitter:    "admin",
-		Approver:     "admin",
-		ApproveTime:  util.GetCurrentTime(),
-		State:        "Approved",
-	}
-	_, err = AddPermission(permission)
-	if err != nil {
-		panic(err)
-	}
-}
+// 	permission = &Permission{
+// 		Owner:        "built-in",
+// 		Name:         "permission-built-in",
+// 		CreatedTime:  util.GetCurrentTime(),
+// 		DisplayName:  "Built-in Permission",
+// 		Description:  "Built-in Permission",
+// 		Users:        []string{"built-in/*"},
+// 		Groups:       []string{},
+// 		Roles:        []string{},
+// 		Domains:      []string{},
+// 		Model:        "model-built-in",
+// 		Adapter:      "",
+// 		ResourceType: "Application",
+// 		Resources:    []string{"app-built-in"},
+// 		Actions:      []string{"Read", "Write", "Admin"},
+// 		Effect:       "Allow",
+// 		IsEnabled:    true,
+// 		Submitter:    "admin",
+// 		Approver:     "admin",
+// 		ApproveTime:  util.GetCurrentTime(),
+// 		State:        "Approved",
+// 	}
+// 	_, err = AddPermission(permission)
+// 	if err != nil {
+// 		panic(err)
+// 	}
+// }
 
 func initBuiltInUserAdapter() {
 	adapter, err := GetAdapter("built-in/user-adapter-built-in")
