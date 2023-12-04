@@ -13,7 +13,6 @@ services:
       - db
     environment:
       - RUNNING_IN_DOCKER="true"
-      - DOPPLER_TOKEN
     volumes:
       - ./conf:/conf/
   db:
