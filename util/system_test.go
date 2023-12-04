@@ -42,6 +42,7 @@ func TestGetMemoryUsage(t *testing.T) {
 
 func TestGetVersionInfo(t *testing.T) {
 	versionInfo, err := GetVersionInfo()
+	t.Logf("Error: %v", err)
 	assert.Nil(t, err)
 	t.Log(versionInfo)
 }

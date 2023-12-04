@@ -1,0 +1,75 @@
+name: "Casdoor Staging"
+
+on:
+  push:
+    branches:
+      - "**"
+      - "!staging"
+      - "!master"
+  # pull_request:
+  #   branches:
+  #     - staging
+    # types: [closed]
+  workflow_dispatch:
+
+jobs:
+  secret-scan:
+    name: Secret scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Scanning Secret
+        uses: trufflesecurity/trufflehog@main
+        with:
+          path: ./
+          base: ${{ github.ref_name }}
+          head: HEAD
+          extra_args: --debug --only-verified
+
+  build-image:
+    name: "Build and Push image to GCR stg"
+    environment: dev
+    runs-on: ubuntu-latest
+    env:
+      DOPPLER_TOKEN: ${{ secrets.DOPPLER_TOKEN }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: "Google authenticate"
+        uses: "google-github-actions/auth@v1"
+        with:
+          credentials_json: "${{ secrets.GCP_CREDENTIALS }}"
+
+      - name: "Set up Gcloud SDK"
+        uses: "google-github-actions/setup-gcloud@v1"
+
+      - name: "Use gcloud CLI"
+        run: "gcloud info"
+
+      - name: Install Doppler
+        uses: dopplerhq/cli-action@v1
+
+      - name: Convert template file
+        run: cd conf && doppler run -- envsubst < app.conf.template > app.conf
+
+      - name: Setup Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '^1.16.5'
+          cache-dependency-path: ./go.mod
+
+      - name: Get version info
+        run: go test -v -run TestGetVersionInfo ./util/system_test.go ./util/system.go
+        working-directory: ./
+
+      - name: Docker login
+        run: gcloud auth configure-docker
+
+      - name: Build image
+        run: docker build -t ${{ secrets.IMAGE_NAME }} .
+
+      - name: Push image
+        run: docker push ${{ secrets.IMAGE_NAME }}

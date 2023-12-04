@@ -92,7 +92,9 @@ func GetVersionInfo() (*VersionInfo, error) {
 
 	_, filename, _, _ := runtime.Caller(0)
 	rootPath := path.Dir(path.Dir(filename))
+	print("AAAAAAAAAAAAAAAA ", rootPath)
 	r, err := git.PlainOpen(rootPath)
+	print("BBBBBB ", r)
 	if err != nil {
 		return res, err
 	}

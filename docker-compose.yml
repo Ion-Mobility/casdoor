@@ -2,6 +2,7 @@ version: '3.1'
 services:
   casdoor:
     restart: always
+    # image: gcr.io/ion-staging/casdoor-s:latest
     build:
       context: ./
       dockerfile: Dockerfile
@@ -11,8 +12,8 @@ services:
       - "8000:8000"
     depends_on:
       - db
-    environment:
-      - RUNNING_IN_DOCKER="true"
+    env_file:
+      - .env
     volumes:
       - ./conf:/conf/
   db:
