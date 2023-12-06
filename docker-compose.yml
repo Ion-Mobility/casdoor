@@ -11,8 +11,8 @@ services:
       - "8000:8000"
     depends_on:
       - db
-    environment:
-      - RUNNING_IN_DOCKER="true"
+    env_file:
+      - .env
     volumes:
       - ./conf:/conf/
   db:
