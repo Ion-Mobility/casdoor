@@ -31,7 +31,8 @@ const selector = {
 Cypress.Commands.add('login', ()=>{
   cy.visit("http://localhost:7001");
   cy.get(selector.username).type("admin");
-  cy.get(selector.password).type("123");
+  cy.get(selector.password).type(Cypress.env("ADMIN_PASSWORD"));
+  cy.log("aaaaaaaaa ",Cypress.env("ADMIN_PASSWORD"));
   cy.get(selector.loginButton).click();
   cy.url().should("eq", "http://localhost:7001/");
 })

@@ -12,7 +12,7 @@ describe("Login test", () => {
         "application": "app-built-in",
         "organization": "built-in",
         "username": "admin",
-        "password": "123",
+        "password": Cypress.env('ADMIN_PASSWORD'),
         "autoSignin": true,
         "type": "login",
       },
@@ -23,7 +23,7 @@ describe("Login test", () => {
   it("ui Login succeeded", () => {
     cy.visit("http://localhost:7001");
     cy.get(selector.username).type("admin");
-    cy.get(selector.password).type("123");
+    cy.get(selector.password).type(Cypress.env('ADMIN_PASSWORD'));
     cy.get(selector.loginButton).click();
     cy.url().should("eq", "http://localhost:7001/");
   });
