@@ -4,6 +4,9 @@ on:
     branches:
       - SWI-214
   workflow_dispatch:
+  schedule:
+    - cron: '30 * * * *'
+  
 jobs:
   build:
     name: Build and analyze
