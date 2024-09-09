@@ -5,7 +5,7 @@ on:
       - SWI-214
   workflow_dispatch:
   schedule:
-    - cron: '30 * * * *'
+    - cron: '0 9 */3 * *'
   
 jobs:
   build:
